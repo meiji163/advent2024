@@ -10,14 +10,14 @@ end
 
 def parse(s)
   s1, s2 = s.split(/\n\n/)
-  rules = Hash.new{[]}
+  rules = Hash.new{ [] }
   updates = []
   s1.each_line do |l|
-    a, b = l.split("|").map{ |s| s.to_i }
+    a, b = l.split('|').map(&:to_i)
     rules[a] <<= b
   end
   s2.each_line do |l|
-    updates << l.split(",").map{ |s| s.to_i }
+    updates << l.split(',').map(&:to_i)
   end
   return [ rules, updates ]
 end
@@ -38,9 +38,8 @@ def sort_pages!(rules, pages)
   passes = 0
   loop do
     modified = sort_pages_pass(rules, pages)
-    if not modified
-      break
-    end
+    break unless modified
+
     passes += 1
   end
   passes
@@ -49,18 +48,15 @@ end
 def sort_pages_pass(rules, pages)
   modified = false
   i = 0
-  while (i < pages.length)
+  while i < pages.length
     seen = i > 0 ? pages[0..(i-1)] : []
 
-    catch :outer do
-      rules[pages[i]].each do |a|
-        j = seen.find_index(a)
-        if j != nil
-          pages[i], pages[j] = pages[j], pages[i]
-          modified = true
-          throw :outer
-        end
-      end
+    rules[pages[i]].each do |a|
+      j = seen.find_index(a)
+      next if j.nil?
+
+      pages[i], pages[j] = pages[j], pages[i]
+      modified = true
     end
     i += 1
   end
@@ -69,7 +65,7 @@ end
 
 def part1(rules, updates)
   updates.select { |pgs| valid?(rules, pgs) }
-    .map { |pgs| pgs[pgs.length / 2]}
+    .map { |pgs| pgs[pgs.length / 2] }
     .sum
 end
 
