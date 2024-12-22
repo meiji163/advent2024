@@ -1,3 +1,5 @@
+require './lib/grid.rb'
+
 require "test/unit"
 include Test::Unit::Assertions
 
@@ -18,12 +20,8 @@ end
 
 def find_coords(grid, val)
   out = []
-  h = grid.length - 1
-  w = grid[0].length - 1
-  (0..h).each do |i|
-    (0..w).each do |j|
-      out << [i, j] if grid[i][j] == val
-    end
+  Grid.each_index(grid.size, grid[0].size) do |i, j|
+    out << [i, j] if grid[i][j] == val
   end
   out
 end
@@ -47,20 +45,15 @@ def count_paths(prev, start, target)
 end
 
 def bfs(grid, start)
-  h = grid.length
-  w = grid[0].length
   prev = Hash.new { [] }
   q = [start]
 
   while !q.empty?
-    i, j = q.pop
-    nbrs = [[i+1, j], [i-1, j], [i, j+1], [i, j-1]]
-             .reject { |n| n[0] >= h || n[0] < 0 || n[1] >= w || n[1] < 0 }
-             .select { |n| grid[n[0]][n[1]] == grid[i][j] + 1}
+    c = q.pop
+    nbrs = Grid.neighbors(grid, c)
+             .select { |n| grid[n[0]][n[1]] == grid[c[0]][c[1]] + 1}
     nbrs.each do |n|
-      if !prev[n].include?([i, j])
-        prev[n] <<= [i, j]
-      end
+      prev[n] <<= c unless prev[n].include?(c)
       q.unshift(n)
     end
   end
@@ -81,7 +74,7 @@ def part2(grid)
   starts.each do |start|
     prev = bfs(grid, start)
     # count_paths traverses from 9 -> 0
-    n_paths += ends.map { |e| count_paths(prev, e, start)}
+    n_paths += ends.map { |e| count_paths(prev, e, start)}.sum
   end
   n_paths
 end

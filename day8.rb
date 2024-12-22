@@ -1,34 +1,22 @@
+require './lib/grid.rb'
 require 'test/unit'
 include Test::Unit::Assertions
 
 def main
   input = File.read('./input/8.txt')
-  grid = parse(input)
+  grid = Grid.from_string(input)
   p part1(grid)
   p part2(grid)
 end
 
-def parse(input)
-  g = []
-  input.each_line do |l|
-    g << l.gsub(/\n/,'').chars
-  end
-  g
-end
-
 def antenna_pos(grid)
   pos = Hash.new { [] }
+
   h = grid.length
   w = grid[0].length
-  pos = Hash.new { [] }
-
-  (0..(h - 1)).each do |i|
-    (0..(w - 1)).each do |j|
-      c = grid[i][j]
-      if c != '.'
-        pos[c] <<= [i,j]
-      end
-    end
+  Grid.each_index(h, w) do |i, j|
+    c = grid[i][j]
+    pos[c] <<= [i,j] if c != '.'
   end
   pos
 end
@@ -47,11 +35,8 @@ def part1(grid)
       dx, dy = c2[0] - c1[0], c2[1] - c1[1]
       [[c1[0] - dx, c1[1] - dy],
        [c2[0] + dx, c2[1] + dy]]
-    }
-              .filter { |coord|
-      i, j = coord
-      i < h && j < w && i >= 0 && j >= 0
-    }
+    }.reject { |coord| Grid.oob?(grid, coord) }
+
     nodes.each do |n|
       all_nodes << n
     end
@@ -69,19 +54,18 @@ def part2(grid)
     pairs = coords.combination(2).to_a
     pairs.each do |pair|
       c1, c2 = pair
-      if all_nodes.include?(c1) && all_nodes.include?(c2)
-        next
-      end
+      next if all_nodes.include?(c1) && all_nodes.include?(c2)
+
       dx, dy = c2[0] - c1[0], c2[1] - c1[1]
       i, j = c1[0], c1[1]
-      while (i < h && j < w && i >= 0 && j >= 0)
+      until Grid.oob?(grid, [i, j])
         all_nodes << i + h*j
         i += dx
         j += dy
       end
 
       i, j = c1[0], c1[1]
-      while (i < h && j < w && i >= 0 && j >= 0)
+      until Grid.oob?(grid, [i, j])
         all_nodes << i + h*j
         i -= dx
         j -= dy
@@ -106,7 +90,7 @@ def test
   ............
   ............
 EOS
-  grid = parse(input)
+  grid = Grid.from_string(input)
   assert_equal(14, part1(grid))
   assert_equal(34, part2(grid))
 end

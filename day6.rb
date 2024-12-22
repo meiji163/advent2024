@@ -1,32 +1,22 @@
-require "set"
-require "test/unit"
+require './lib/grid.rb'
+require 'test/unit'
 include Test::Unit::Assertions
 
 def main
   input = File.read("./input/6.txt")
-  grid = parse(input)
+  grid = Grid.from_string(input)
   p part1(grid)
   p part2(grid)
 end
 
-def parse(s)
-  g = []
-  s.each_line do |l|
-    g << l.gsub(/\n/, '').chars
-  end
-  g
-end
-
 def start(grid)
-  grid
-    .map{ |row| row.find_index('^') }
-    .filter_map.with_index{ |j, i| [i, j] if not j.nil? }
-    .first
+  Grid.each_index(grid.size, grid[0].size) do |i, j|
+    return [i, j] if grid[i][j] == '^'
+  end
 end
 
 def part1(grid)
   c = start(grid)
-
   seen = run(grid, c)
   w = grid[0].length - 1
   h = grid.length - 1
@@ -39,35 +29,21 @@ def part1(grid)
 end
 
 # directions
-# 0 => [-1, 0]
-# 1 => [0, 1]
-# 2 => [1, 0]
-# 3 => [0, -1]
 def run(grid, start)
   w = grid[0].length - 1
   h = grid.length - 1
   c = start[0..1]
-  dir = 0
+  dir = Direction::North
   seen = Set.new
   seen << c[0] + h*(c[1] + w*dir)
   loop do
-    i, j = c[0], c[1]
-    case dir
-    when 0
-      i -= 1
-    when 1
-      j += 1
-    when 2
-      i += 1
-    when 3
-      j -= 1
-    end
+    i, j = Direction.go(dir, c)
     if i > h or i < 0 or j > w or j < 0
       break
     end
 
     if grid[i][j] == '#'
-      dir = (dir + 1)%4
+      dir = Direction.rturn(dir)
       next
     end
     c[0], c[1] = i, j
@@ -120,7 +96,7 @@ def test
 #.........
 ......#...
 EOS
-  grid = parse(input)
+  grid = Grid.from_string(input)
   assert_equal(41, part1(grid))
   assert_equal(6, part2(grid))
 end

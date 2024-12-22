@@ -1,22 +1,17 @@
+require './lib/grid.rb'
+
 require 'test/unit'
 include Test::Unit::Assertions
 
 def main
   input = File.read('./input/12.txt')
-  grid = parse(input)
+  grid = Grid.from_string(input)
   p solve(grid)
 end
 
-def parse(input)
-  input.split(/\n/).map(&:chars)
-end
-
 def neighbors(grid, c)
-  i, j = c
   val = grid[c[0]][c[1]]
-  [[i + 1, j], [i - 1, j], [i, j + 1], [i, j - 1]]
-    .reject { |n| n[0] >= grid.size || n[0].negative? || n[1] >= grid[0].size || n[1].negative? }
-    .select { |n| grid[n[0]][n[1]] == val }
+  Grid.neighbors(grid, c).select { |n| grid[n[0]][n[1]] == val }
 end
 
 def fill(grid, coord)
@@ -37,32 +32,6 @@ def fill(grid, coord)
   [vis, perim]
 end
 
-def turn_right(dir)
-  case dir
-  when [-1, 0]
-    [0, 1]
-  when [0, 1]
-    [1, 0]
-  when [1, 0]
-    [0, -1]
-  when [0, -1]
-    [-1, 0]
-  end
-end
-
-def turn_left(dir)
-  case dir
-  when [0, 1]
-    [-1, 0]
-  when [1, 0]
-    [0, 1]
-  when [0, -1]
-    [1, 0]
-  when [-1, 0]
-    [0, -1]
-  end
-end
-
 def count_sides(set)
   total = 0
   done = Set.new
@@ -80,13 +49,13 @@ def count_sides(set)
         next
       end
       if set.include?([i, j - 1])
-        # boundary to the right of the set
-        bdry, sides = traverse_boundary(set, [i, j], [1, 0])
+        # boundary to the east of the set
+        bdry, sides = traverse_boundary(set, [i, j], Direction::South)
         total += sides
         done.merge(bdry)
       elsif set.include?([i, j + 1])
-        # boundary to the left of the set
-        bdry, sides = traverse_boundary(set, [i, j], [-1, 0])
+        # boundary to the west of the set
+        bdry, sides = traverse_boundary(set, [i, j], Direction::North)
         total += sides
         done.merge(bdry)
       end
@@ -97,37 +66,40 @@ def count_sides(set)
 end
 
 # Traverse around the boundary of the set starting at c.
-# The dir must be chosen so that the count-clockwise perpendicular
+# The dir must be chosen so that the counter-clockwise perpendicular
 # vector points outward from the set e.g.
 #   ...        ↑...
 #   ...c→     ←c...
 #   ...↓        ...
 def traverse_boundary(set, c, dir)
   i, j = c
-  perp = turn_left(dir)
+  perp = Direction.lturn(dir)
   start = [i, j]
-  start_dir = [dir[0], dir[1]]
+  start_dir = dir
   seen = Set.new
   sides = 0
   loop do
-    ni = i + dir[0]
-    nj = j + dir[1]
+    dirv = Direction.vec(dir)
+    perpv = Direction.vec(perp)
+    ni = i + dirv[0]
+    nj = j + dirv[1]
     seen << [i, j]
+
     if set.include?([ni, nj])
       # turn left
-      dir = turn_left(dir)
-      perp = turn_left(perp)
+      dir = Direction.lturn(dir)
+      perp = Direction.lturn(perp)
       sides += 1
-    elsif set.include?([ni - perp[0], nj - perp[1]])
+    elsif set.include?([ni - perpv[0], nj - perpv[1]])
       # go straight
       i = ni
       j = nj
     else
       # turn right
-      i = ni - perp[0]
-      j = nj - perp[1]
-      dir = turn_right(dir)
-      perp = turn_right(perp)
+      i = ni - perpv[0]
+      j = nj - perpv[1]
+      dir = Direction.rturn(dir)
+      perp = Direction.rturn(perp)
       sides += 1
     end
     break if start == [i, j] && dir == start_dir
@@ -175,8 +147,8 @@ def test
   MIIIIIJJEE
   MIIISIJEEE
   MMMISSJEEE
-EOS
-  grid = parse(input1)
+  EOS
+  grid = Grid.from_string(input1)
   p1, p2 = solve(grid)
   assert_equal(1930, p1)
   assert_equal(1206, p2)
@@ -188,8 +160,8 @@ EOS
   ABBAAA
   ABBAAA
   AAAAAA
-EOS
-  grid = parse(input2)
+  EOS
+  grid = Grid.from_string(input2)
   _, p2 = solve(grid)
   assert_equal(368, p2)
 end

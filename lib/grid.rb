@@ -10,7 +10,18 @@ module Grid
 
     def neighbors(grid, c)
       i, j = c
-      [[i - 1, 0], [i, j + 1], [i + 1, j], [i, j - 1]]
+      [[i - 1, j], [i, j + 1], [i + 1, j], [i, j - 1]]
+        .reject{ |n| self.oob?(grid, n) }
+    end
+
+    def each_index(height, width)
+      if block_given?
+        (0..(height - 1)).each do |i|
+          (0..(width - 1)).each do |j|
+            yield(i, j)
+          end
+        end
+      end
     end
 
     def pprint(grid)
@@ -38,7 +49,7 @@ module Direction
 
   class << self
     def vec(dir)
-      case dir % 4
+      case (dir % 4)
       when North
         [-1, 0]
       when East
