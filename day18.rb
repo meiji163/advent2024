@@ -60,9 +60,7 @@ def search(grid)
   dist = Hash.new
   dist[start] = weight(start)
 
-  steps = 0
   until q.length == 0
-    steps += 1
     c = q.pop
     d = dist[c]
     if c == targ

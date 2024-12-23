@@ -24,6 +24,18 @@ module Grid
       end
     end
 
+    def find(grid, val)
+      h = grid.size
+      w = grid[0].size
+      out = []
+      (0..(h - 1)).each do |i|
+        (0..(w - 1)).each do |j|
+          out << [i, j] if grid[i][j] == val
+        end
+      end
+      out
+    end
+
     def pprint(grid)
       grid.each do |row|
         print row.join('')
@@ -34,7 +46,7 @@ module Grid
     end
 
     def from_string(s)
-      s.each_line.map { |l| l.gsub(/\n/,'').chars }
+      s.each_line.map { |l| l.gsub(/\n/, '').chars }
     end
   end
 end
@@ -45,7 +57,7 @@ module Direction
   South = 2
   West  = 3
 
-  All = [North, East, South, West]
+  All = [North, East, South, West].freeze
 
   class << self
     def vec(dir)
@@ -70,6 +82,10 @@ module Direction
       end
     end
 
+    def opp(dir)
+      4 - dir
+    end
+
     def rturn(dir)
       (dir + 1) % 4
     end
@@ -78,9 +94,22 @@ module Direction
       (dir - 1) % 4
     end
 
-    def go(dir, coord)
+    def go(dir, coord, steps: 1)
       v = vec(dir)
-      [v[0] + coord[0], v[1] + coord[1]]
+      [coord[0] + steps * v[0], coord[1] + steps * v[1]]
+    end
+
+    def string(dir)
+      case (dir % 4)
+      when 0
+        "North"
+      when 1
+        "East"
+      when 2
+        "South"
+      when 3
+        "West"
+      end
     end
   end
 end
