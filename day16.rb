@@ -84,16 +84,16 @@ def search(grid, start)
       nc = Direction.go(ndir, [i, j])
       next if grid[nc[0]][nc[1]] == '#'
 
-      unless done.include?(next_key)
-        next_score = score[next_key]
-        if next_score.nil? || this_score + 1000 < next_score
-          score[next_key] = this_score + 1000
-          prev[next_key] = [key]
-        elsif this_score + 1000 == next_score
-          prev[next_key] <<= key
-        end
-        q << next_key
+      next if done.include?(next_key)
+
+      next_score = score[next_key]
+      if next_score.nil? || this_score + 1000 < next_score
+        score[next_key] = this_score + 1000
+        prev[next_key] = [key]
+      elsif this_score + 1000 == next_score
+        prev[next_key] <<= key
       end
+      q << next_key
     end
     done << key
   end

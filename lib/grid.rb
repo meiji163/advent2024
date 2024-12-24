@@ -9,9 +9,9 @@ module Grid
     end
 
     def neighbors(grid, c)
-      i, j = c
+      i, j = c[0], c[1]
       [[i - 1, j], [i, j + 1], [i + 1, j], [i, j - 1]]
-        .reject{ |n| self.oob?(grid, n) }
+        .reject { |n| oob?(grid, n) }
     end
 
     def each_index(height, width)
@@ -31,6 +31,16 @@ module Grid
       (0..(h - 1)).each do |i|
         (0..(w - 1)).each do |j|
           out << [i, j] if grid[i][j] == val
+        end
+      end
+      out
+    end
+
+    def select(height, width)
+      out = []
+      (0..(height - 1)).each do |i|
+        (0..(width - 1)).each do |j|
+          out << [i, j] if yield(i, j)
         end
       end
       out
