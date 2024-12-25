@@ -62,9 +62,8 @@ def run!(reg, insts, halt_early: false)
       reg[1] ^= reg[2]
     when OP_OUT
       out << (val % 8)
-      if halt_early && out != insts[0..(out.size - 1)]
-        return out
-      end
+
+      return out if halt_early && out != insts[0..(out.size - 1)]
     end
     i += 2
   end
@@ -90,8 +89,8 @@ end
 #
 # output(B % 8) depends only on the lowest 8 bits of A.
 # A is then shifted left 3 bits. We recursively search for
-# candidate inputs by matching 1st output with lower 8 bits of A,
-# 2nd output with 9 bits of A, etc...
+# candidate inputs by matching 1st output with lowest 8 bits of A,
+# 2nd output with lowest 11 bits of A, etc...
 def part2(ops)
   cands = (0..0xff).to_a
   (0..(ops.size - 1)).each do |i|
@@ -121,7 +120,6 @@ def test
   out = run!(reg, ops)
   assert_equal('4,6,3,5,6,3,5,2,1,0', out.join(','))
 end
-
 
 test
 main
